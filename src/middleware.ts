@@ -1,7 +1,7 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse, NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  console.log("in");
+  console.log('in');
   const isAuthenticated = true; // Replace this with your authentication logic
 
   // If the user is authenticated, continue as normal
@@ -10,9 +10,9 @@ export function middleware(request: NextRequest) {
   }
 
   // Redirect to login page if not authenticated
-  return NextResponse.redirect(new URL("/start", request.url));
+  return NextResponse.redirect(new URL('/start', request.url));
 }
 
 export const config = {
-  matcher: ["/app/:path*"],
+  matcher: ['/app/:path*'],
 };

@@ -4,8 +4,8 @@ const nextConfig = {
     return [
       // Basic redirect
       {
-        source: "/",
-        destination: "/app",
+        source: '/',
+        destination: '/app',
         permanent: true,
       },
     ];
