@@ -4,8 +4,15 @@
 
 :root {
   --foreground-rgb: 0, 0, 0;
+  max-width: 430px;
+  max-height: 930px;
 }
 
 body {
+  height: 100vh;
+  max-width: 430px;
+  max-height: 930px;
+  display: flex;
+  flex-direction: column;
   background: #ffffff;
 }
