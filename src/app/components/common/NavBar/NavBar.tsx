@@ -19,7 +19,7 @@ export default function NavBar() {
           />
         </div>
       </div>
-      <div>
+      <div onClick={() => setTab(2)}>
         <Image src="/icons/plus.svg" width={150} height={150} alt="create" />
       </div>
       <div className="flex w-full flex-row items-center justify-between">

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useMemo } from "react";
 
 const NavbarContext = createContext({ tab: 0, setTab: (tab: number) => {} });
 interface NavProviderProps {
@@ -7,7 +7,7 @@ interface NavProviderProps {
 
 export default function NavBarNavigation(props: NavProviderProps) {
   const { children } = props;
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState(2);
 
   return (
     <NavbarContext.Provider value={{ tab, setTab }}>

@@ -1,8 +1,7 @@
 "use client";
-import { Home, Start, Deposit } from "@/app/components";
-import { set } from "@coral-xyz/anchor/dist/cjs/utils/features";
+import { Home, Start, Deposit, Create } from "@/app/components";
 import { useNavbar } from "../context/Navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function Main() {
   const [loaded, setLoaded] = useState(false);
@@ -23,6 +22,7 @@ export default function Main() {
     return (
       <>
         {tab === 0 && <Home />}
+        {tab === 2 && <Create />}
         {tab === 3 && <Deposit />}
 
         <div onClick={clearKey}>clear key</div>
