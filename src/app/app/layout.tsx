@@ -1,17 +1,13 @@
 "use client";
-import React, { FC, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ConnectionProvider,
   WalletProvider,
 } from "@solana/wallet-adapter-react";
-import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+
 import { UnsafeBurnerWalletAdapter } from "@solana/wallet-adapter-wallets";
-import {
-  WalletModalProvider,
-  WalletDisconnectButton,
-  WalletMultiButton,
-} from "@solana/wallet-adapter-react-ui";
-import { clusterApiUrl } from "@solana/web3.js";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import NavBarNavigation from "@/app/context/Navigation";
 
 // Default styles that can be overridden by your app
 require("../wallet.css");
@@ -22,8 +18,6 @@ export default function Layout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
-
   // You can also provide a custom RPC endpoint.
   const endpoint =
     "https://solana-devnet-archive.allthatnode.com/Ez7eqjgszCRYxMTozvryy4B5Y8qvR5Q7/";
@@ -52,8 +46,10 @@ export default function Layout({
       <ConnectionProvider endpoint={endpoint}>
         <WalletProvider wallets={wallets}>
           <WalletModalProvider>
-            <Page> {children}</Page>
-            <NavBar />
+            <NavBarNavigation>
+              <Page> {children}</Page>
+              <NavBar />
+            </NavBarNavigation>
           </WalletModalProvider>
         </WalletProvider>
       </ConnectionProvider>
