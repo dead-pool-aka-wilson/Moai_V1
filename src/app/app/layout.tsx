@@ -16,17 +16,17 @@ import { clusterApiUrl } from "@solana/web3.js";
 // Default styles that can be overridden by your app
 require("../wallet.css");
 
-import { NavBar, Page } from "@/app/_components/common";
+import { NavBar, Page } from "@/app/components/common";
 export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
-  const network = WalletAdapterNetwork.Devnet;
 
   // You can also provide a custom RPC endpoint.
-  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  const endpoint =
+    "https://solana-devnet-archive.allthatnode.com/Ez7eqjgszCRYxMTozvryy4B5Y8qvR5Q7/";
 
   const wallets = useMemo(
     () => [
@@ -45,7 +45,7 @@ export default function Layout({
       new UnsafeBurnerWalletAdapter(),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [network]
+    []
   );
   return (
     <div className="flex h-full flex-col">

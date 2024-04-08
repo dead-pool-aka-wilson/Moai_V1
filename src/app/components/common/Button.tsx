@@ -1,6 +1,6 @@
 import React from "react";
 import { BaseWalletMultiButton } from "@solana/wallet-adapter-react-ui/BaseWalletMultiButton.js";
-import type { ButtonProps } from "./Button.js";
+import type { ButtonProps } from "./Button.jsx";
 
 const LABELS = {
   "change-wallet": "Change wallet",

@@ -1,20 +1,130 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
-  WalletModalProvider,
-  WalletDisconnectButton,
-  WalletMultiButton,
-} from "@solana/wallet-adapter-react-ui";
-import { PublicKey, Keypair } from "@solana/web3.js";
-import { useState } from "react";
-import clsx from "clsx";
+  useConnection,
+  useWallet,
+  useAnchorWallet,
+} from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useState, useCallback, use } from "react";
+
+import {
+  Program,
+  AnchorProvider,
+  Idl,
+  Wallet as AnchorWallet,
+} from "@coral-xyz/anchor";
+import { Moai as MoaiType } from "@/app/types/moai";
+import Moai from "@/app/idl/moai.json";
+import {
+  Keypair,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  ComputeBudgetProgram,
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
+import {
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
+import BN from "bn.js";
+import {
+  SPL_MEMO,
+  MOAI_PUBKEY,
+  ROCK_MINT,
+  MOAI_MINT,
+  ESCROW_ACCOUNT,
+  MOAI_PROGRAM_ID,
+} from "@/app/constants";
 
 export default function Deposit() {
   const { connection } = useConnection();
   const { publicKey, sendTransaction, connected, connecting } = useWallet();
+  const wallet = useAnchorWallet();
   const [count, setCount] = useState(1);
+
+  const buyRock = useCallback(
+    async (amount: number) => {
+      if (wallet && publicKey) {
+        try {
+          const userSpending = Keypair.fromSecretKey(
+            new Uint8Array(
+              JSON.parse(`[${localStorage.getItem("moai-spending")}]` || "[]")
+            )
+          );
+          console.log(userSpending.publicKey.toBase58());
+          const provider = new AnchorProvider(connection, wallet, {
+            commitment: "confirmed",
+          });
+          const idl = JSON.parse(JSON.stringify(Moai));
+          const program = new Program<MoaiType>(idl, MOAI_PROGRAM_ID, provider);
+
+          const {
+            context: { slot: minContextSlot },
+            value: { blockhash, lastValidBlockHeight },
+          } = await connection
+            .getLatestBlockhashAndContext()
+            .then((blockhash) => blockhash)
+            .catch((err) => {
+              throw Error(err);
+            });
+          // Config priority fee and amount to transfer
+          const PRIORITY_RATE = 25000; // MICRO_LAMPORTS
+          const AMOUNT_TO_TRANSFER = 0.001 * LAMPORTS_PER_SOL;
+
+          // Instruction to set the compute unit price for priority fee
+          const PRIORITY_FEE_INSTRUCTIONS = [
+            ComputeBudgetProgram.setComputeUnitLimit({
+              units: 300_000,
+            }),
+            ComputeBudgetProgram.setComputeUnitPrice({
+              microLamports: PRIORITY_RATE,
+            }),
+          ];
+
+          const userRockAccount = getAssociatedTokenAddressSync(
+            ROCK_MINT,
+            publicKey
+          );
+          const userMoaiAccount = getAssociatedTokenAddressSync(
+            MOAI_MINT,
+            publicKey
+          );
+          console.log(program.programId.toBase58());
+          const signature = await program.methods
+            .mintRock(new BN(amount))
+            .accounts({
+              user: publicKey,
+              userSpending: userSpending.publicKey,
+              moai: MOAI_PUBKEY,
+              rockMint: ROCK_MINT,
+              moaiMint: MOAI_MINT,
+              userRockAccount,
+              userMoaiAccount,
+              escrowAccount: ESCROW_ACCOUNT,
+              tokenProgram: TOKEN_PROGRAM_ID,
+              associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+              systemProgram: SystemProgram.programId,
+              memoProgram: SPL_MEMO,
+              rent: SYSVAR_RENT_PUBKEY,
+            })
+            .signers([userSpending])
+            .preInstructions(PRIORITY_FEE_INSTRUCTIONS)
+            .rpc({ skipPreflight: false, commitment: "confirmed" })
+            .then((res) => res)
+            .catch((err) => {
+              throw Error(err);
+            });
+          console.log("signature : ", signature);
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    },
+    [connection, wallet, publicKey, sendTransaction]
+  );
 
   return (
     <>
@@ -35,14 +145,16 @@ export default function Deposit() {
             <span className="text-2xl font-bold">
               <span className=" font-normal">$TOTAL Price</span> :{" "}
               <span className=" font-extrabold text-purple-700">
-                {count * 0.01}
+                {count.toString().length > 1
+                  ? `${count.toString().slice(0, count.toString().length - 1)}.${count.toString().slice(-1)}`
+                  : `0.${count.toString()}`}
               </span>{" "}
               SOL
             </span>
           </div>
           <div>
             <span className="text-purple-600 font-bold text-lg">
-              0.01 SOL (per rock)
+              0.1 SOL (per rock)
             </span>
             <br />
             - 0.096 SOL (Pool Escrow)
@@ -96,7 +208,12 @@ export default function Deposit() {
                 +
               </p>
             </div>
-            <div className="flex h-max-[60px] items-center justify-center bg-purple-600 text-white  w-[200px] rounded-2xl p-4">
+            <div
+              onClick={async () => {
+                await buyRock(count);
+              }}
+              className="flex h-max-[60px] items-center justify-center bg-purple-600 text-white  w-[200px] rounded-2xl p-4"
+            >
               <p className="font-bold text-lg text-center flex flex-row justify-between  gap-4">
                 buy rock
               </p>

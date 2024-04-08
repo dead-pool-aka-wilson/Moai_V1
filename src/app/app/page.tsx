@@ -1,5 +1,5 @@
 "use client";
-import { Home, Start, Deposit } from "@/app/_components";
+import { Home, Start, Deposit } from "@/app/components";
 import { set } from "@coral-xyz/anchor/dist/cjs/utils/features";
 import { useState, useEffect } from "react";
 
