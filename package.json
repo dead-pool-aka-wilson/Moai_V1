@@ -11,26 +11,34 @@
     "format:fix": "prettier --write --ignore-path .gitignore ."
   },
   "dependencies": {
+    "@coral-xyz/anchor": "^0.29.0",
+    "@irys/sdk": "^0.1.21",
+    "@solana/spl-token": "^0.4.3",
+    "@solana/wallet-adapter-nextjs-starter": "^0.8.32",
     "@solana/web3.js": "^1.91.4",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "clsx": "^2.1.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-typescript": "^18.0.0",
     "next": "14.1.4",
     "prettier": "^3.2.5",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.24",
     "autoprefixer": "^10.0.1",
+    "class-variance-authority": "^0.7.0",
     "eslint": "^8",
     "eslint-config-next": "14.1.4",
     "eslint-config-prettier": "^9.1.0",
     "postcss": "^8",
     "prettier-plugin-tailwindcss": "^0.5.13",
+    "tailwind-merge": "^2.2.2",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
   },
