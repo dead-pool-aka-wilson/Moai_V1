@@ -38,6 +38,7 @@ import {
   ESCROW_ACCOUNT,
   MOAI_PROGRAM_ID,
 } from "@/app/constants";
+import { getUserInfoAddress } from "@/app/utils";
 
 export default function Deposit() {
   const { connection } = useConnection();
@@ -104,6 +105,7 @@ export default function Deposit() {
               userRockAccount,
               userMoaiAccount,
               escrowAccount: ESCROW_ACCOUNT,
+              userInfo: getUserInfoAddress(userSpending.publicKey, MOAI_PUBKEY),
               tokenProgram: TOKEN_PROGRAM_ID,
               associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
               systemProgram: SystemProgram.programId,

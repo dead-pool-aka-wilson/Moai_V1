@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { ed25519 } from "@noble/curves/ed25519";
+import { createHash } from "crypto";
 import type { PutBlobResult } from "@vercel/blob";
 import {
   useConnection,
@@ -8,7 +9,7 @@ import {
   useAnchorWallet,
 } from "@solana/wallet-adapter-react";
 import { useState, useCallback } from "react";
-
+import * as anchor from "@coral-xyz/anchor";
 import { Program, AnchorProvider, Idl, Wallet } from "@coral-xyz/anchor";
 import { Moai as MoaiType } from "@/app/types/moai";
 import Moai from "@/app/idl/moai.json";
@@ -36,6 +37,11 @@ import {
 import Irys, { WebIrys } from "@irys/sdk";
 import { get } from "http";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import {
+  getUserInfoAddress,
+  getMemeAddress,
+  getVoteAddress,
+} from "@/app/utils";
 
 const UPLOAD_MAX_TRIES = 3;
 const ALLOW_FILE_EXTENSION = "jpg,jpeg,png";
@@ -96,6 +102,14 @@ const removeFileName = (originalFileName: string): string => {
 
   return originalFileName.substring(lastIndex + 1).toLowerCase();
 };
+
+const hashValue = (name: string): Promise<string> =>
+  new Promise((resolve) =>
+    setTimeout(
+      () => resolve(createHash("sha256").update(name).digest("hex")),
+      0
+    )
+  );
 
 export default function Create() {
   const { connection } = useConnection();
@@ -158,121 +172,155 @@ export default function Create() {
     };
   };
 
-  const createMeme = useCallback(async () => {
-    console.log("button clicked");
-    if (!file) {
-      alert("Please upload image");
-      return;
-    }
-
-    try {
-      const userSpending = Keypair.fromSecretKey(
-        new Uint8Array(
-          JSON.parse(`[${localStorage.getItem("moai-spending")}]` || "[]")
-        )
-      );
-      const wallet = {
-        publicKey: userSpending.publicKey,
-        secretKey: userSpending.secretKey,
-        signMessage: async (data: Uint8Array) =>
-          ed25519.sign(data, userSpending.secretKey.slice(0, 32)),
-      };
-      let imageUri: string | undefined = undefined;
-
-      let tries = 0;
-      while (imageUri === undefined) {
-        // const irys = await getWebIrys(connection.rpcEndpoint, wallet);
-        // console.log(irys);
-        // imageUri = await uploadImage(irys, file);
-        tries++;
-
-        const response = await fetch(`/api/upload?filename=${file.name}`, {
-          method: "POST",
-          body: file,
-        });
-        const newBlob = (await response.json()) as PutBlobResult;
-        imageUri = newBlob.url;
-
-        if (tries > UPLOAD_MAX_TRIES) {
-          alert("Failed to upload image");
-          throw Error("Failed to upload image");
-        }
+  const createMeme = useCallback(
+    async (name: string, symbol: string, description: string) => {
+      console.log("button clicked");
+      if (!file) {
+        alert("Please upload image");
+        return;
       }
-      console.log(imageUri);
-      const jsonFile = {
-        name,
-        symbol,
-        description,
-        image: imageUri,
-      };
+      if (!name) {
+        alert("Please input name");
+        return;
+      }
+      if (!symbol) {
+        alert("Please input symbol");
+        return;
+      }
+      if (!description) {
+        alert("Please input description");
+        return;
+      }
 
-      // const provider = new AnchorProvider(connection, wallet, {
-      //   commitment: "confirmed",
-      // });
-      // const idl = JSON.parse(JSON.stringify(Moai));
-      // const program = new Program<MoaiType>(idl, MOAI_PROGRAM_ID, provider);
+      try {
+        const userSpending = Keypair.fromSecretKey(
+          new Uint8Array(
+            JSON.parse(`[${localStorage.getItem("moai-spending")}]` || "[]")
+          )
+        );
 
-      // const {
-      //   context: { slot: minContextSlot },
-      //   value: { blockhash, lastValidBlockHeight },
-      // } = await connection
-      //   .getLatestBlockhashAndContext()
-      //   .then((blockhash) => blockhash)
-      //   .catch((err) => {
-      //     throw Error(err);
-      //   });
-      // // Config priority fee and amount to transfer
-      // const PRIORITY_RATE = 25000; // MICRO_LAMPORTS
-      // const AMOUNT_TO_TRANSFER = 0.001 * LAMPORTS_PER_SOL;
+        let imageUri: string | undefined = undefined;
+        let tries = 0;
+        while (imageUri === undefined) {
+          tries++;
 
-      // // Instruction to set the compute unit price for priority fee
-      // const PRIORITY_FEE_INSTRUCTIONS = [
-      //   ComputeBudgetProgram.setComputeUnitLimit({
-      //     units: 300_000,
-      //   }),
-      //   ComputeBudgetProgram.setComputeUnitPrice({
-      //     microLamports: PRIORITY_RATE,
-      //   }),
-      // ];
+          const response = await fetch(
+            `/api/upload/photo?filename=${file.name}`,
+            {
+              method: "POST",
+              body: file,
+            }
+          );
+          const newBlob = (await response.json()) as PutBlobResult;
+          imageUri = newBlob.url;
 
-      // const userRockAccount = getAssociatedTokenAddressSync(
-      //   ROCK_MINT,
-      //   publicKey
-      // );
-      // const userMoaiAccount = getAssociatedTokenAddressSync(
-      //   MOAI_MINT,
-      //   publicKey
-      // );
-      // console.log(program.programId.toBase58());
-      // const signature = await program.methods
-      //   .mintRock(new BN(amount))
-      //   .accounts({
-      //     user: publicKey,
-      //     userSpending: userSpending.publicKey,
-      //     moai: MOAI_PUBKEY,
-      //     rockMint: ROCK_MINT,
-      //     moaiMint: MOAI_MINT,
-      //     userRockAccount,
-      //     userMoaiAccount,
-      //     escrowAccount: ESCROW_ACCOUNT,
-      //     tokenProgram: TOKEN_PROGRAM_ID,
-      //     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      //     systemProgram: SystemProgram.programId,
-      //     memoProgram: SPL_MEMO,
-      //     rent: SYSVAR_RENT_PUBKEY,
-      //   })
-      //   .signers([userSpending])
-      //   .preInstructions(PRIORITY_FEE_INSTRUCTIONS)
-      //   .rpc({ skipPreflight: false, commitment: "confirmed" })
-      //   .then((res) => res)
-      //   .catch((err) => {
-      //     throw Error(err);
-      //   });
-      // console.log("signature : ", signature);
-    } catch (err) {
-      console.log(err);
-    }
-  }, [connection, file]);
+          if (tries > UPLOAD_MAX_TRIES) {
+            alert("Failed to upload image");
+            throw Error("Failed to upload image");
+          }
+        }
+        console.log(imageUri);
+        const jsonFile = {
+          name,
+          symbol,
+          description,
+          image: imageUri,
+        };
+        tries = 0;
+        let jsonUri: string | undefined = undefined;
+        while (jsonUri === undefined) {
+          tries++;
+
+          const response = await fetch(
+            `/api/upload/jsonFile?filename=${name}.json`,
+            {
+              method: "POST",
+              body: JSON.stringify(jsonFile),
+            }
+          );
+          const newBlob = (await response.json()) as PutBlobResult;
+          jsonUri = newBlob.url;
+
+          if (tries > UPLOAD_MAX_TRIES) {
+            alert("Failed to upload json");
+            throw Error("Failed to upload json");
+          }
+        }
+        console.log(jsonUri);
+
+        const index = await (await hashValue(name)).slice(0, 32);
+
+        const provider = new AnchorProvider(
+          connection,
+          new NodeWallet(userSpending),
+          {
+            commitment: "confirmed",
+          }
+        );
+        const idl = JSON.parse(JSON.stringify(Moai));
+        const program = new Program<MoaiType>(idl, MOAI_PROGRAM_ID, provider);
+
+        const {
+          context: { slot: minContextSlot },
+          value: { blockhash, lastValidBlockHeight },
+        } = await connection
+          .getLatestBlockhashAndContext()
+          .then((blockhash) => blockhash)
+          .catch((err) => {
+            throw Error(err);
+          });
+        // Config priority fee and amount to transfer
+        const PRIORITY_RATE = 25000; // MICRO_LAMPORTS
+        const AMOUNT_TO_TRANSFER = 0.001 * LAMPORTS_PER_SOL;
+
+        // Instruction to set the compute unit price for priority fee
+        const PRIORITY_FEE_INSTRUCTIONS = [
+          ComputeBudgetProgram.setComputeUnitLimit({
+            units: 300_000,
+          }),
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports: PRIORITY_RATE,
+          }),
+        ];
+
+        const userInfo = await program.account.user.fetch(
+          getUserInfoAddress(userSpending.publicKey, MOAI_PUBKEY)
+        );
+
+        const userRockAccount = userInfo.rockAccount;
+        const userMoaiAccount = userInfo.moaiAccount;
+        const meme = getMemeAddress(index);
+        const signature = await program.methods
+          .createMeme(index, name, jsonUri)
+          .accounts({
+            userSpending: userSpending.publicKey,
+            meme: meme,
+            moai: MOAI_PUBKEY,
+            rockMint: ROCK_MINT,
+            moaiMint: MOAI_MINT,
+            userRockAccount,
+            userMoaiAccount,
+            memeRockAccount: getAssociatedTokenAddressSync(
+              ROCK_MINT,
+              meme,
+              true
+            ),
+            userSpendingVote: getVoteAddress(userSpending.publicKey, meme),
+            tokenProgram: TOKEN_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            memoProgram: SPL_MEMO,
+            systemProgram: SystemProgram.programId,
+            rent: SYSVAR_RENT_PUBKEY,
+          })
+          .signers([userSpending])
+          .rpc({ skipPreflight: true, commitment: "finalized" });
+        console.log(signature);
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    [connection, file]
+  );
 
   return (
     <>
@@ -334,7 +382,7 @@ export default function Create() {
       <div className="w-full px-4">
         <button
           className="bg-purple-600 text-white rounded-2xl p-2 my-2 w-full"
-          onClick={() => createMeme()}
+          onClick={() => createMeme(name, symbol, description)}
         >
           Post
         </button>

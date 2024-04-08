@@ -1,17 +1,18 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
+
 import { PublicKey } from "@solana/web3.js";
-import { Moai } from "@/app/types/moai";
+
+import { MOAI_PROGRAM_ID } from "@/app/constants";
 
 const MOAI = "moai";
 const MEME = "meme";
 const VOTE = "vote";
-const program = anchor.workspace.Moai as Program<Moai>;
+const USER = "user";
 
 export const getMemeAddress = (index: string) => {
   const [address, _] = PublicKey.findProgramAddressSync(
     [anchor.utils.bytes.utf8.encode(MEME), Buffer.from(index)],
-    program.programId
+    MOAI_PROGRAM_ID
   );
   return address;
 };
@@ -23,7 +24,22 @@ export const getVoteAddress = (userSpending: PublicKey, meme: PublicKey) => {
       userSpending.toBuffer(),
       meme.toBuffer(),
     ],
-    program.programId
+    MOAI_PROGRAM_ID
+  );
+  return address;
+};
+
+export const getUserInfoAddress = (
+  userSpending: PublicKey,
+  moai: PublicKey
+) => {
+  const [address, _] = PublicKey.findProgramAddressSync(
+    [
+      anchor.utils.bytes.utf8.encode(USER),
+      moai.toBuffer(),
+      userSpending.toBuffer(),
+    ],
+    MOAI_PROGRAM_ID
   );
   return address;
 };

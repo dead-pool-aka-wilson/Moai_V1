@@ -161,6 +161,11 @@ export type Moai = {
           isSigner: true;
         },
         {
+          name: "userInfo";
+          isMut: true;
+          isSigner: false;
+        },
+        {
           name: "moai";
           isMut: false;
           isSigner: false;
@@ -387,6 +392,22 @@ export type Moai = {
         ];
       };
     },
+    {
+      name: "user";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "rockAccount";
+            type: "publicKey";
+          },
+          {
+            name: "moaiAccount";
+            type: "publicKey";
+          },
+        ];
+      };
+    },
   ];
   errors: [
     {
@@ -563,6 +584,11 @@ export const IDL: Moai = {
           name: "userSpending",
           isMut: true,
           isSigner: true,
+        },
+        {
+          name: "userInfo",
+          isMut: true,
+          isSigner: false,
         },
         {
           name: "moai",
@@ -787,6 +813,22 @@ export const IDL: Moai = {
           {
             name: "count",
             type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "user",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "rockAccount",
+            type: "publicKey",
+          },
+          {
+            name: "moaiAccount",
+            type: "publicKey",
           },
         ],
       },
