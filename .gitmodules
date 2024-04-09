@@ -1,0 +1,6 @@
+[submodule "program"]
+	path = program
+	url = git@github.com-dead:dead-pool-aka-wilson/token-fair-sale.git
+[submodule "app"]
+	path = app
+	url = git@github.com-dead:dead-pool-aka-wilson/Moai_FE_v1.git
