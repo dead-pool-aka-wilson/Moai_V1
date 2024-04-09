@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import prismaRandom from "prisma-extension-random";
 
-let prisma: PrismaClient;
-
-prisma = new PrismaClient();
+const prisma = new PrismaClient().$extends(prismaRandom());
 
 export default prisma;

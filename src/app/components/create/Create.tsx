@@ -6,7 +6,7 @@ import type { PutBlobResult } from "@vercel/blob";
 import {
   useConnection,
   useWallet,
-  useAnchorWallet,
+  useAnchorWallet
 } from "@solana/wallet-adapter-react";
 import { useState, useCallback } from "react";
 import * as anchor from "@coral-xyz/anchor";
@@ -19,12 +19,12 @@ import {
   SYSVAR_RENT_PUBKEY,
   ComputeBudgetProgram,
   LAMPORTS_PER_SOL,
-  PublicKey,
+  PublicKey
 } from "@solana/web3.js";
 import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddressSync,
+  getAssociatedTokenAddressSync
 } from "@solana/spl-token";
 import BN from "bn.js";
 import {
@@ -33,7 +33,7 @@ import {
   ROCK_MINT,
   MOAI_MINT,
   ESCROW_ACCOUNT,
-  MOAI_PROGRAM_ID,
+  MOAI_PROGRAM_ID
 } from "@/app/constants";
 import Irys, { WebIrys } from "@irys/sdk";
 import { get } from "http";
@@ -41,8 +41,11 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
   getUserInfoAddress,
   getMemeAddress,
-  getVoteAddress,
+  getVoteAddress
 } from "@/app/utils";
+import { useNavbar } from "@/app/context/Navigation";
+import { useRouter } from "next/navigation";
+import { set } from "@coral-xyz/anchor/dist/cjs/utils/features";
 
 const UPLOAD_MAX_TRIES = 3;
 const ALLOW_FILE_EXTENSION = "jpg,jpeg,png";
@@ -58,7 +61,7 @@ const getIrys = async (rpcEndpoint: string, key: any) => {
     network: NETWORK,
     token, // Token used for payment
     key: key,
-    config: { providerUrl }, // Optional provider URL, only required when using Devnet
+    config: { providerUrl } // Optional provider URL, only required when using Devnet
   });
   await irys.ready();
   return irys;
@@ -121,6 +124,8 @@ export default function Create() {
   const [name, setName] = useState<string>("");
   const [symbol, setSymbol] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const { setTab, setMemeId } = useNavbar();
+  const router = useRouter();
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.value.length > 32) {
@@ -209,7 +214,7 @@ export default function Create() {
             `/api/upload/photo?filename=${file.name}`,
             {
               method: "POST",
-              body: file,
+              body: file
             }
           );
           const newBlob = (await response.json()) as PutBlobResult;
@@ -225,7 +230,7 @@ export default function Create() {
           name,
           symbol,
           description,
-          image: imageUri,
+          image: imageUri
         };
         tries = 0;
         let jsonUri: string | undefined = undefined;
@@ -236,7 +241,7 @@ export default function Create() {
             `/api/upload/jsonFile?filename=${name}.json`,
             {
               method: "POST",
-              body: JSON.stringify(jsonFile),
+              body: JSON.stringify(jsonFile)
             }
           );
           const newBlob = (await response.json()) as PutBlobResult;
@@ -255,7 +260,7 @@ export default function Create() {
           connection,
           new NodeWallet(userSpending),
           {
-            commitment: "confirmed",
+            commitment: "confirmed"
           }
         );
         const idl = JSON.parse(JSON.stringify(Moai));
@@ -263,7 +268,7 @@ export default function Create() {
 
         const {
           context: { slot: minContextSlot },
-          value: { blockhash, lastValidBlockHeight },
+          value: { blockhash, lastValidBlockHeight }
         } = await connection
           .getLatestBlockhashAndContext()
           .then((blockhash) => blockhash)
@@ -277,11 +282,11 @@ export default function Create() {
         // Instruction to set the compute unit price for priority fee
         const PRIORITY_FEE_INSTRUCTIONS = [
           ComputeBudgetProgram.setComputeUnitLimit({
-            units: 300_000,
+            units: 300_000
           }),
           ComputeBudgetProgram.setComputeUnitPrice({
-            microLamports: PRIORITY_RATE,
-          }),
+            microLamports: PRIORITY_RATE
+          })
         ];
 
         const userInfo = await program.account.user.fetch(
@@ -329,7 +334,7 @@ export default function Create() {
             associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
             memoProgram: SPL_MEMO,
             systemProgram: SystemProgram.programId,
-            rent: SYSVAR_RENT_PUBKEY,
+            rent: SYSVAR_RENT_PUBKEY
           })
           .remainingAccounts(
             topVote != undefined
@@ -337,8 +342,8 @@ export default function Create() {
                   {
                     pubkey: topVote,
                     isSigner: false,
-                    isWritable: false,
-                  },
+                    isWritable: false
+                  }
                 ]
               : []
           )
@@ -349,35 +354,31 @@ export default function Create() {
         const res = await fetch(`/api/meme`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
             // 'Content-Type': 'application/x-www-form-urlencoded',
           },
-          mode: "same-origin",
+
           body: JSON.stringify({
-            name,
-            symbol,
+            name: name,
+            symbol: symbol,
             desc: description,
             image: imageUri,
-            meme_pubkey: meme.toBase58(),
-          }),
+            memeId: meme.toBase58(),
+            creator: userSpending.publicKey.toBase58()
+          })
         });
 
         if (res.ok) {
-          alert("Meme posted successfully");
-          setFile(null);
-          setName("");
-          setSymbol("");
-          setDescription("");
-          setImage("/images/deposit.png");
+          setMemeId(meme.toBase58());
+          setTab(0);
         } else {
-          alert("Failed to post meme");
           throw Error("Failed to post meme");
         }
       } catch (err) {
         console.log(err);
       }
     },
-    [connection, file]
+    [connection, file, name, symbol, description]
   );
 
   return (

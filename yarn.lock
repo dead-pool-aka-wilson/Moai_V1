@@ -7436,6 +7436,11 @@ prettier@^3.2.5:
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.2.5.tgz#e52bc3090586e824964a8813b09aba6233b28368"
   integrity sha512-3/GWa9aOC0YeD7LUfvOG2NiDyhOWRvt1k+rcKhOuYnMY24iiCphgneUfJDyFXd6rZCAnuLBv6UeAULtrhT/F4A==
 
+prisma-extension-random@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/prisma-extension-random/-/prisma-extension-random-0.2.0.tgz#ed11e27b6fa0b1bf0f3aeee7b5afc98a559d67ee"
+  integrity sha512-8KyyBJz7yXvNtxhxlBlHzvUWu28DJg03KkOfnci7zLCaLtDWYHa6w9HgeEA9J4+onsZGAMYHSEGSVloSs44lDQ==
+
 prisma@^5.12.1:
   version "5.12.1"
   resolved "https://registry.yarnpkg.com/prisma/-/prisma-5.12.1.tgz#db4596253bb066afc9f08744642f200a398d8d51"

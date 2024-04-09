@@ -36,8 +36,36 @@ export async function POST(request: Request): Promise<NextResponse> {
         }
       })
       .catch((err) => console.log(err));
-    console.log(result);
+
     return NextResponse.json({ success: true });
+  } catch (e) {
+    return NextResponse.error().json();
+  }
+}
+
+export async function GET(request: Request): Promise<NextResponse> {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (
+      id !== "" &&
+      id !== null &&
+      id !== undefined &&
+      id !== "undefined" &&
+      id !== "null"
+    ) {
+      const result = await prisma.meme.findFirst({
+        where: { memeId: id }
+      });
+
+      console.log(result);
+      return NextResponse.json(result);
+    } else {
+      const result = await prisma.meme.findRandom();
+      console.log("random");
+      console.log(result);
+      return NextResponse.json(result);
+    }
   } catch (e) {
     return NextResponse.error().json();
   }
