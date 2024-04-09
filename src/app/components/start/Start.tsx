@@ -2,16 +2,18 @@
 import Image from "next/image";
 import { Keypair } from "@solana/web3.js";
 import { useRouter } from "next/navigation";
+import { useNavbar } from "@/app/context/Navigation";
 
 export default function Start() {
   const router = useRouter();
-
+  const { setTab } = useNavbar();
   const generateSpendingKey = () => {
     const newKey = Keypair.generate();
     console.log(newKey.secretKey);
 
     localStorage.setItem("moai-spending", newKey.secretKey.toString());
     location.reload();
+    setTab(3);
   };
 
   return (

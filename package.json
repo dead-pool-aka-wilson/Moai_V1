@@ -24,6 +24,7 @@
     "@vercel/postgres": "^0.8.0",
     "@vercel/postgres-kysely": "^0.8.0",
     "bn.js": "^5.2.1",
+    "bs58": "^5.0.0",
     "clsx": "^2.1.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-typescript": "^18.0.0",
