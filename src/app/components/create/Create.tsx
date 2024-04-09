@@ -19,6 +19,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   ComputeBudgetProgram,
   LAMPORTS_PER_SOL,
+  PublicKey,
 } from "@solana/web3.js";
 import {
   TOKEN_PROGRAM_ID,
@@ -290,6 +291,24 @@ export default function Create() {
         const userRockAccount = userInfo.rockAccount;
         const userMoaiAccount = userInfo.moaiAccount;
         const meme = getMemeAddress(index);
+
+        let topVote: null | undefined | PublicKey = null;
+
+        while (topVote === null) {
+          topVote = await program.account.moai
+            .fetch(MOAI_PUBKEY)
+            .then((moai) => {
+              console.log(moai);
+              return moai.currentTopVote;
+            })
+            .catch((e) => {
+              console.log(e);
+              return null;
+            });
+          console.log("passed");
+          console.log("topVote : ", topVote && topVote.toBase58());
+        }
+
         const signature = await program.methods
           .createMeme(index, name, jsonUri)
           .accounts({
@@ -312,9 +331,48 @@ export default function Create() {
             systemProgram: SystemProgram.programId,
             rent: SYSVAR_RENT_PUBKEY,
           })
+          .remainingAccounts(
+            topVote != undefined
+              ? [
+                  {
+                    pubkey: topVote,
+                    isSigner: false,
+                    isWritable: false,
+                  },
+                ]
+              : []
+          )
           .signers([userSpending])
           .rpc({ skipPreflight: true, commitment: "finalized" });
         console.log(signature);
+
+        const res = await fetch(`/api/meme`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          mode: "same-origin",
+          body: JSON.stringify({
+            name,
+            symbol,
+            desc: description,
+            image: imageUri,
+            meme_pubkey: meme.toBase58(),
+          }),
+        });
+
+        if (res.ok) {
+          alert("Meme posted successfully");
+          setFile(null);
+          setName("");
+          setSymbol("");
+          setDescription("");
+          setImage("/images/deposit.png");
+        } else {
+          alert("Failed to post meme");
+          throw Error("Failed to post meme");
+        }
       } catch (err) {
         console.log(err);
       }
