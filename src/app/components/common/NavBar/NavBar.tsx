@@ -27,7 +27,7 @@ export default function NavBar() {
           <Image src="/icons/money.svg" width={24} height={24} alt="moai" />
         </div>
 
-        <div>
+        <div onClick={() => setTab(4)}>
           <Image src="/icons/person.svg" width={20} height={20} alt="my page" />
         </div>
       </div>
